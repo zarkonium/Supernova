@@ -5,8 +5,9 @@ if string.sub(system.getInfo("model"),1,4) == "iPad" then
     {
         content =
         {
-            width = 360,
-            height = 480,
+            fps = 60,
+            width = 320,
+            height = 568,
             scale = "letterBox",
             xAlign = "center",
             yAlign = "center",
@@ -31,6 +32,7 @@ elseif string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight >
     {
         content =
         {
+            fps = 60,
             width = 320,
             height = 568,
             scale = "letterBox",
@@ -57,8 +59,9 @@ elseif string.sub(system.getInfo("model"),1,2) == "iP" then
     {
         content =
         {
+            fps = 60,
             width = 320,
-            height = 480,
+            height = 568,
             scale = "letterBox",
             xAlign = "center",
             yAlign = "center",
@@ -82,8 +85,9 @@ elseif display.pixelHeight / display.pixelWidth > 1.72 then
     {
         content =
         {
+            fps = 60,
             width = 320,
-            height = 570,
+            height = 568,
             scale = "letterBox",
             xAlign = "center",
             yAlign = "center",
@@ -99,8 +103,9 @@ else
     {
         content =
         {
+            fps = 60,
             width = 320,
-            height = 512,
+            height = 568,
             scale = "letterBox",
             xAlign = "center",
             yAlign = "center",
