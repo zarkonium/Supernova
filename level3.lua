@@ -11,16 +11,21 @@ function scene:createScene( event )
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
 	
-	local level = 1
+	local level = 3
+	myApp.level = level
 	local radius = 6
 	local activeCircles = 0
-	local numCircles = 8
+	local numCircles = 16
+	local numBigCircles = 0
 	local score = 0
-	local targetScore = 4
+	local targetScore = 8
+	local targetMessage = "Destroy " .. targetScore .. " stars"
 	local isPlanted = true
 	local canStart = false
 	local collapseTime = 1500
 	local displayScore
+	local dimBg
+	local beginRound
 	
 	local bg = display.newImageRect( group, "images/levelBg.png", display.contentWidth, display.contentHeight )
 	bg.x = centerX
@@ -43,6 +48,41 @@ function scene:createScene( event )
 	leftEdge.alpha = .5
 	rightEdge.alpha = .5
 	
+--	--------------------------------------
+--	---------- Obstacles Begin --------------
+--	--------------------------------------
+--	
+--	local R,G,B = 231/255, 148/255, 120/255
+--	
+--	local star1 = display.newImageRect( group, "images/circle.png", 2*radius, 2*radius )
+--	star1.x = 100
+--	star1.y = 230 
+--	star1:setFillColor(R,G,B)
+--	physics.addBody (star1, "static", {friction=0, radius=radius})
+--	
+--	local star2 = display.newImageRect( group, "images/circle.png", 2*radius, 2*radius )
+--	star2.x = 150 
+--	star2.y = 280 
+--	star2:setFillColor(R,G,B)
+--	physics.addBody (star1, "static", {friction=0, radius=radius})
+--	
+--	local star3 = display.newImageRect( group, "images/circle.png", 2*radius, 2*radius )
+--	star3.x = 200 
+--	star3.y = 230 
+--	star3:setFillColor(R,G,B)
+--	physics.addBody (star1, "static", {friction=0, radius=radius})
+--	
+--	local line1 = display.newLine( group, star1.x, star1.y, star2.x, star2.y, star3.x, star3.y )
+--	line1:setStrokeColor( R,G,B )
+--	line1.strokeWidth = 3
+--	physics.addBody (line1, "static", {friction=0})
+--	
+--	
+--	--------------------------------------
+--	---------- Obstacles End ---------------
+--	--------------------------------------
+	
+	
 	local function spawnCircle( event, r, g, b )
 		if event.phase == "ended" and not isPlanted then	
 			--local circ = display.newCircle(group, event.x, event.y, radius )
@@ -51,14 +91,6 @@ function scene:createScene( event )
 			circ.y = event.y
 			circ.isActive = true
 			isPlanted = true
-			--circ.alpha = .5
-			--physics.addBody( circ, "static", { density=1.0, bounce=1, radius=radius, filter=circCollisionFilter2 } )
-			
-			--local function remakeBodyRadius()
-	--			physics.removeBody( circ )
-	--			physics.addBody( circ, "static", { density=1.0, bounce=1, radius=radius*circ.xScale, filter=circCollisionFilter2 } )
-	--		end
-			--timer.performWithDelay ( 20, remakeBodyRadius, 5 )
 			
 			local function makeBody()
 				physics.addBody( circ, "static", { density=1.0, bounce=1, radius=radius*circ.xScale, filter=circCollisionFilter2 } )
@@ -78,16 +110,26 @@ function scene:createScene( event )
 			transition.to(circ, {time=150, xScale = 7, yScale=7, alpha = .5, onComplete = makeBody})
 			
 		end
+		if event.phase == "ended" and not canStart then
+			beginRound()
+		end
 	end
 	
 	for i = 1,numCircles do
-		--local circ = display.newCircle(group, 30 + (display.contentWidth - 60)*math.random(), 30 + (display.contentHeight - 60)*math.random(), radius )
 		local circ = display.newImageRect( group, "images/circle.png", 2*radius, 2*radius )
 		circ.x = 30 + (display.contentWidth - 60)*math.random()
 		circ.y = 30 + (display.contentHeight - 60)*math.random()
-		--local r, g, b = math.random(), math.random(), math.random()
-		local r = math.random(50,100)/100
-		local g, b = r, r
+		local r,g,b
+		if i <= numBigCircles then
+			circ.finalScale = 14
+			r = math.random(80,100)/100
+			g, b = r, 0
+		else
+			circ.finalScale = 7
+			r = math.random(50,100)/100
+			g, b = r, r
+		end
+		
 		circ:setFillColor ( r, g, b )
 		physics.addBody( circ, "dynamic", { density=1.0, bounce=1, friction=0, radius=radius, filter=circCollisionFilter } )
 		local direction= 90*math.random(0,3) + math.random(200,700)/10
@@ -117,7 +159,7 @@ function scene:createScene( event )
 				end
 				
 				activeCircles = activeCircles + 1
-				transition.to(circ, {time=150, xScale = 7, yScale=7, alpha = .5, onComplete = makeBody})
+				transition.to(circ, {time=150, xScale = circ.finalScale, yScale=circ.finalScale, alpha = .5, onComplete = makeBody})
 			end
 		end
 		
@@ -129,41 +171,88 @@ function scene:createScene( event )
 	displayScore.anchorX = 1
 	displayScore.anchorY = 1
 	
-	local function endRound()
-		if activeCircles == 0 and isPlanted and canStart then
-			print("<---------------- game over ------------------->")
-			isPlanted = false
-			Runtime:removeEventListener ( "touch", spawnCircle )
-        	Runtime:removeEventListener ( "enterFrame", endRound )
-			if score >= targetScore then
-				myApp.settings.maxLevel = math.max(myApp.settings.maxLevel, level + 1)
-				myApp.saveTable(myApp.settings.maxLevel, "level.json")
-				storyboard.gotoScene ( "menu" )
-			else
-				storyboard.purgeScene ( storyboard.getCurrentSceneName() )
-				storyboard.reloadScene()
-			end
-		end
-	end
-	
 	local instructions = display.newImageRect( group, "images/instructions.png", 320,128 )
-	instructions.x = -154
+	instructions.x = -184
 	instructions.y = 190
 	
-	local instructionsText = display.newText( group, "Destroy " .. targetScore .. " stars", -100, 194, "HelveticaNeue-UltraLight", 18 )
+	local instructionsText = display.newText( group, targetMessage, -100, 194, "HelveticaNeue-UltraLight", 18 )
 	instructionsText:setFillColor(0)
 	
 	transition.to(instructions, {time=200,x = 154})
 	transition.to(instructionsText, {time=200,x = 114})
 	
-	local function beginRound()
-		transition.to(instructions, {time=200,x = -154})
+	local button1 = display.newImageRect( group, "images/button.png", 320,64 )
+	button1.x = -154
+	button1.y = 272
+	local button1Text = display.newText( group, "Retry", -100, 272, "HelveticaNeue-UltraLight", 18 )
+	button1Text:setFillColor(0)
+	local button2 = display.newImageRect( group, "images/button.png", 320,64 )
+	button2.x = -154
+	button2.y = 330
+	local button2Text = display.newText( group, "Menu", -100, 330, "HelveticaNeue-UltraLight", 18 )
+	button2Text:setFillColor(0)
+	
+	local function endRound()
+		if activeCircles == 0 and isPlanted and canStart then
+			--isPlanted = false
+			Runtime:removeEventListener ( "touch", spawnCircle )
+        	Runtime:removeEventListener ( "enterFrame", endRound )
+			if score >= targetScore then
+				instructionsText.text = "Success"
+				transition.to(instructions, {time=200,x = 154})
+				transition.to(instructionsText, {time=200,x = 114})
+				
+				local function advance()
+					myApp.settings.maxLevel = math.max(myApp.settings.maxLevel, level + 1)
+					myApp.saveTable(myApp.settings, "settings.json")
+					transition.to ( dimBg, {time=500, easing = outExpo, alpha=1, onComplete = function() storyboard.gotoScene ( "menu" ) end} )
+				end
+				
+				timer.performWithDelay ( 1000, advance, 1 )
+			else
+			
+				local function retry( event )
+					if event.phase == "ended" then
+						--storyboard.purgeScene ( storyboard.getCurrentSceneName() )
+						--storyboard.reloadScene()
+						storyboard.gotoScene ( "tryagain" )
+					end
+				end
+				
+				local function goToMenu( event )
+					if event.phase =="ended" then
+						transition.to ( dimBg, {time=500, easing = outExpo, alpha=1, onComplete = function() storyboard.gotoScene ( "menu" ) end} )
+					end
+				end
+				
+				instructionsText.text = "Failure"
+				
+				button1:addEventListener ( "touch", retry )
+				button2:addEventListener ( "touch", goToMenu )
+				
+				transition.to(instructions, {time=200,x = 154})
+				transition.to(instructionsText, {time=200,x = 114})
+				transition.to(button1, {time=200,x = 142})
+				transition.to(button1Text, {time=200,x = 102})
+				transition.to(button2, {time=200,x = 128})
+				transition.to(button2Text, {time=200,x = 98})
+				
+			end
+		end
+	end
+	
+	function beginRound()
+		transition.to(instructions, {time=200,x = -194})
 		transition.to(instructionsText, {time=200,x = -100})
 		isPlanted = false
 		canStart = true
 	end
 	
-	timer.performWithDelay ( 1500, beginRound, 1 )
+	dimBg = display.newRect( group, centerX, centerY, display.contentWidth, display.contentHeight )
+	dimBg:setFillColor(0)
+	dimBg.alpha = .01
+	
+	--timer.performWithDelay ( 1500, beginRound, 1 )
 	
 	Runtime:addEventListener ( "touch", spawnCircle )
 	Runtime:addEventListener ( "enterFrame", endRound )
@@ -183,7 +272,6 @@ end
 
 function scene:destroyScene( event )
         local group = self.view
-
 end
 
 
@@ -197,12 +285,3 @@ scene:addEventListener( "exitScene", scene )
 scene:addEventListener( "destroyScene", scene )
 
 return scene
-
-
-
-
-
-
-
-
-

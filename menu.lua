@@ -47,7 +47,7 @@ function scene:createScene( event )
 			local star = display.newImageRect( bgGroup, "images/star.png", 16, 16 )
 			star.x = math.random(0,display.contentWidth)
 			star.y = math.random(40,3*display.contentHeight-40)
-			star.alpha = math.random(0,5)/10
+			star.alpha = math.random(1,6)/10
 			transition.blink( star, {time=math.random(3000,5000), alpha = math.random(0,5)/10, width = 24, height = 24} )
 		end
 		
@@ -228,8 +228,6 @@ function scene:createScene( event )
 		dimBg:setFillColor(0)
 		dimBg.alpha = .01
 		
-		dimBg:toFront()
-		
 		--transition.to(dimBg, {time = 1500, alpha = 1})
 		function paralaxEffect()
 			local x, y = scrollView:getContentPosition()
@@ -271,7 +269,6 @@ scene:addEventListener( "exitScene", scene )
 scene:addEventListener( "destroyScene", scene )
 
 return scene
-
 
 
 
