@@ -1,3 +1,5 @@
+--See level1.lua for comments template
+
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 local myApp = require( "myApp" ) 
