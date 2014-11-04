@@ -1,9 +1,14 @@
+--- Load required modules -- 
 local storyboard = require ( "storyboard" )
 local myApp = require( "myApp" ) 
 
+--hide status bar
 display.setStatusBar( display.HiddenStatusBar )
+
+--activate auto scene purging on scene changes
 storyboard.purgeOnSceneChange = true
 
+--load settings or create if no past settings exist
 myApp.settings = myApp.loadTable("settings.json")
 if not myApp.settings then
 	myApp.settings = {}
@@ -12,10 +17,5 @@ if not myApp.settings then
 	myApp.saveTable(myApp.settings, "settings.json")
 end
 
-function myApp.showScreen1()
-    --storyboard.removeAll()
-    storyboard.gotoScene("menu", {time=250})
-    return true
-end
-
-myApp.showScreen1()
+-- go to level select menu
+storyboard.gotoScene("menu", {time=250})

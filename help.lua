@@ -1,14 +1,18 @@
+--- Load required modules -- 
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 local myApp = require( "myApp" ) 
 
+-- execute when scene is launched
 function scene:createScene( event )
         local group = self.view
         
+        --variable decrelations
 		local centerX = display.contentCenterX
 		local centerY = display.contentCenterY
 		local page = 1
 		
+		--instruction slide
 		local bg = display.newImageRect( group, "images/help/help" .. page .. ".png", display.contentWidth, display.contentHeight )
 		bg.x = centerX
 		bg.y = centerY
@@ -24,6 +28,7 @@ function scene:createScene( event )
 					bg.y = centerY
 					bg:addEventListener ( "touch", nextPage )
 				else
+					-- finish instructions, so go back to game and save seenInstructions variable
 					myApp.settings.seenInstructions = true
 					myApp.saveTable(myApp.settings, "settings.json")
 					timer.performWithDelay ( 100, function() storyboard.gotoScene ( "level1" ) end, 1 )
@@ -31,6 +36,7 @@ function scene:createScene( event )
 			end
 		end
 		
+		--add touch listener
 		bg:addEventListener ( "touch", nextPage )
 		
 end
@@ -51,7 +57,7 @@ end
 
 
 ---------------------------------------------------------------------------------
--- END OF YOUR IMPLEMENTATION
+-- END OF IMPLEMENTATION
 ---------------------------------------------------------------------------------
 
 scene:addEventListener( "createScene", scene )

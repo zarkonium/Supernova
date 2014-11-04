@@ -1,6 +1,13 @@
+-- this module is used to access data globally through different scenes
+-- everything is stored in a table, including functions, other tables, etc.
+
+-- create table
 local M = {}
+
+--- Load required modules -- 
 local json = require("json")
 
+-- create data saving function
 function M.saveTable(t, filename)
     
     local path = system.pathForFile( filename, system.DocumentsDirectory)
@@ -15,6 +22,7 @@ function M.saveTable(t, filename)
     end
 end
  
+ -- create data loading function
 function M.loadTable(filename)
 	
     local path = system.pathForFile( filename, system.DocumentsDirectory)
@@ -30,4 +38,5 @@ function M.loadTable(filename)
     return nil
 end
 
+--return table
 return M

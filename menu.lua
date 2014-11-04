@@ -1,18 +1,25 @@
+--- Load required modules -- 
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 local myApp = require( "myApp" ) 
 local widget = require("widget")
 
+-- forward decleration (global to entire scene)
 local paralaxEffect
 
 function scene:createScene( event )
+		-- create scene group
 		local group = self.view
+		
+		--variable/forward decleration
 		local centerX = display.contentCenterX
 		local centerY = display.contentCenterY
 		local dimBg
 		
+		--create background group
 		local bgGroup = display.newGroup()
 		
+		--add scroll view
 		local scrollView = widget.newScrollView
 			{
 			    top = 0,
@@ -31,6 +38,7 @@ function scene:createScene( event )
 			
 		scrollView:insert(bgGroup)
 		
+		--add images to background
 		local bg1 = display.newImageRect( bgGroup, "images/bg1.png", display.contentWidth, display.contentHeight )
 		bg1.x = centerX
 		bg1.y = 2*display.contentHeight + centerY
@@ -43,6 +51,8 @@ function scene:createScene( event )
 		bg3.x = centerX
 		bg3.y = centerY
 		
+		
+		--spawn some stars in background
 		for i=1,100 do
 			local star = display.newImageRect( bgGroup, "images/star.png", 16, 16 )
 			star.x = math.random(0,display.contentWidth)
@@ -51,13 +61,16 @@ function scene:createScene( event )
 			transition.blink( star, {time=math.random(3000,5000), alpha = math.random(0,5)/10, width = 24, height = 24} )
 		end
 		
+		--comets in background
 		local function createComet(x,y)
 			local comet = display.newImageRect( bgGroup, "images/comet.png", 36, 12 )
 			if x and y then
+				--if x and y provided spawn there
 				comet.x = x
 				comet.y = y
 				comet.startSide = 1
 			else
+				--else spawn at random location
 				comet.startSide = math.random(0,1)
 				comet.x = - 80 + comet.startSide * ( display.contentWidth + 160 )
 				comet.y = math.random(300,3*display.contentHeight - 300)
@@ -66,6 +79,7 @@ function scene:createScene( event )
 			comet.alpha = .2
 			comet.startX = comet.x
 			comet.startY = comet.y
+			--move comet
 			if comet.startSide == 0 then
 				transition.to(comet, {time=5000, x=display.contentWidth + 80, y = comet.startY + ( display.contentWidth + 160 )})
 			else
@@ -76,12 +90,13 @@ function scene:createScene( event )
 		createComet(display.contentWidth + 80,1200)
 		local cometTimer = timer.performWithDelay ( 3000, createComet, 0 )
 		
-		
+		--scroll to next feasible level
 		scrollView:scrollToPosition( {y=- 2*display.contentHeight, time=0, onComplete = function() scrollView:scrollToPosition( {y=- 2*display.contentHeight +90*math.min( 11,(myApp.settings.maxLevel-1)), time=1000}) end} )
 		
 		
 		group:insert(scrollView)
 		
+		--create level selelct functions
 		local function goToScene( event )
 			if event.target.alpha == 1 and event.phase == "ended" then
 				timer.cancel( cometTimer )
@@ -210,32 +225,38 @@ function scene:createScene( event )
 		----------- Level Buttons End ------------
 		---------------------------------------
 		
+		--add artwork
 		local houseImg = display.newImageRect( group, "images/house.png", 256, 128 )
 		houseImg.x = 128
 		houseImg.y = display.contentHeight - 64
 		
+		--add game title
 		local logo = display.newImageRect( group, "images/supernova.png", 256, 64 )
 		logo.x = 204
 		logo.y = display.contentHeight - 346
 		
+		--add inner glow effect
 		local dimEdge = display.newImageRect( group, "images/edgeFade.png", display.contentWidth, display.contentHeight )
 		dimEdge.x = centerX
 		dimEdge.y = centerY
 		dimEdge:setFillColor(1)
 		dimEdge.alpha = 0.1
 		
+		--add diming scene change effect panel
 		dimBg = display.newRect( group, centerX, centerY, display.contentWidth, display.contentHeight )
 		dimBg:setFillColor(0)
 		dimBg.alpha = .01
 		
 		--transition.to(dimBg, {time = 1500, alpha = 1})
+		
+		--define paralaxEffect for entire scene scope
 		function paralaxEffect()
 			local x, y = scrollView:getContentPosition()
-			houseImg.x = math.min(128 - (y+1136) , 128)
-			houseImg.y = math.max(display.contentHeight - 64 + .6*(y+1136) , display.contentHeight - 64)
-			houseImg.alpha = ( 1 - (y+1136)/400 )
-			logo.alpha = ( 1 - (y+1136)/140 )
-			logo.y = math.max(display.contentHeight - 346 + (y+1136) , display.contentHeight - 346)
+			houseImg.x = math.min(128 - (y + 1136) , 128)
+			houseImg.y = math.max(display.contentHeight - 64 + .6*(y + 1136) , display.contentHeight - 64)
+			houseImg.alpha = ( 1 - (y + 1136)/400 )
+			logo.alpha = ( 1 - (y + 1136)/140 )
+			logo.y = math.max(display.contentHeight - 346 + (y + 1136) , display.contentHeight - 346)
 		end
 		
 end
@@ -244,8 +265,6 @@ end
 function scene:enterScene( event )
         local group = self.view
 		Runtime:addEventListener ( "enterFrame", paralaxEffect )
---		storyboard.removeScene ( "level1" )
---		storyboard.purgeScene ( "level1" )
 end
 
 function scene:exitScene( event )
@@ -260,7 +279,7 @@ end
 
 
 ---------------------------------------------------------------------------------
--- END OF YOUR IMPLEMENTATION
+-- END OF IMPLEMENTATION
 ---------------------------------------------------------------------------------
 
 scene:addEventListener( "createScene", scene )

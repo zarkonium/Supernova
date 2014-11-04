@@ -1,16 +1,20 @@
+--- Load required modules -- 
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 local myApp = require( "myApp" ) 
 local physics = require( "physics" )
 
 function scene:createScene( event )
+	--create group local to scene which will be purged on scene change
 	local group = self.view
+	
+	--start physics engine
 	physics.start()
 	physics.setGravity( 0, 0 )
 	
+	--variable/forward declerations
 	local centerX = display.contentCenterX
 	local centerY = display.contentCenterY
-	
 	local level = 1
 	myApp.level = level
 	local radius = 6
@@ -27,14 +31,17 @@ function scene:createScene( event )
 	local dimBg
 	local beginRound
 	
+	--create background
 	local bg = display.newImageRect( group, "images/levelBg.png", display.contentWidth, display.contentHeight )
 	bg.x = centerX
 	bg.y = centerY
 	
+	--create collision groups
 	local edgeCollisionFilter = { categoryBits=1, maskBits=1 } 
 	local circCollisionFilter = { categoryBits=2, maskBits=1 } 
 	local circCollisionFilter2 = { categoryBits=3, maskBits=2 } 
 	
+	--create edges and add to physics engine
 	local topEdge = display.newRect(group, centerX, 10, display.contentWidth - 26, 6 )
 	physics.addBody ( topEdge, "static",{friction = 0})
 	local bottomEdge = display.newRect(group, centerX, display.contentHeight - 10, display.contentWidth - 26, 6 )
@@ -52,6 +59,7 @@ function scene:createScene( event )
 --	---------- Obstacles Begin --------------
 --	--------------------------------------
 --	
+-- --create color palette for constellations
 --	local R,G,B = 231/255, 148/255, 120/255
 --	
 --	local star1 = display.newImageRect( group, "images/circle.png", 2*radius, 2*radius )
@@ -102,10 +110,12 @@ function scene:createScene( event )
 					circ = nil
 				end
 				
+				--add collapse feature
 				timer.performWithDelay ( collapseTime, function() transition.to(circ, {time=150, xScale = 0.1, yScale=0.1, alpha = 0, onComplete = removeBody}) end,1 )
 				
 			end
 			
+			--track stars exploded
 			activeCircles = activeCircles + 1
 			transition.to(circ, {time=150, xScale = 7, yScale=7, alpha = .5, onComplete = makeBody})
 			
@@ -115,11 +125,17 @@ function scene:createScene( event )
 		end
 	end
 	
+	--create moving "stars"
 	for i = 1,numCircles do
+		
 		local circ = display.newImageRect( group, "images/circle.png", 2*radius, 2*radius )
 		circ.x = 30 + (display.contentWidth - 60)*math.random()
 		circ.y = 30 + (display.contentHeight - 60)*math.random()
+		
+		--forward decleration for color variables
 		local r,g,b
+		
+		--check if stars should be special (i.e. bigger explosion)
 		if i <= numBigCircles then
 			circ.finalScale = 14
 			r = math.random(80,100)/100
@@ -130,8 +146,11 @@ function scene:createScene( event )
 			g, b = r, r
 		end
 		
+		--color star and add physics body
 		circ:setFillColor ( r, g, b )
 		physics.addBody( circ, "dynamic", { density=1.0, bounce=1, friction=0, radius=radius, filter=circCollisionFilter } )
+		
+		--randomize initial direction
 		local direction= 90*math.random(0,3) + math.random(200,700)/10
 		local speed = 100
 		circ:setLinearVelocity (speed * math.cos(direction * math.pi / 180), speed * math.sin(direction * math.pi / 180))
@@ -142,7 +161,9 @@ function scene:createScene( event )
 				displayScore.text = score .. "/" .. targetScore
 				circ.isActive = true
 				circ:setLinearVelocity (0, 0)
+				
 				local function makeBody()
+					
 					physics.removeBody( circ )
 					physics.addBody( circ, "static", { density=1.0, bounce=1, radius=radius*circ.xScale, filter=circCollisionFilter2 } )
 					circ.isActive = true
@@ -154,23 +175,28 @@ function scene:createScene( event )
 						circ = nil
 					end
 					
+					--add collapse feature
 					timer.performWithDelay ( collapseTime, function() transition.to(circ, {time=150, xScale = 0.1, yScale=0.1, alpha = 0, onComplete = removeBody}) end,1 )
 					
 				end
 				
+				-- track stars exploded
 				activeCircles = activeCircles + 1
 				transition.to(circ, {time=150, xScale = circ.finalScale, yScale=circ.finalScale, alpha = .5, onComplete = makeBody})
 			end
 		end
 		
+		--add collision listener
 		circ:addEventListener( "collision", onCollision )
 		
 	end
 	
+	--create score display
 	displayScore = display.newText( group, score .. "/" .. targetScore, display.contentWidth - 16, display.contentHeight - 14, "HelveticaNeue-Light", 18 )
 	displayScore.anchorX = 1
 	displayScore.anchorY = 1
 	
+	-- create level goal text and bg
 	local instructions = display.newImageRect( group, "images/instructions.png", 320,128 )
 	instructions.x = -184
 	instructions.y = 190
@@ -178,9 +204,11 @@ function scene:createScene( event )
 	local instructionsText = display.newText( group, targetMessage, -100, 194, "HelveticaNeue-UltraLight", 18 )
 	instructionsText:setFillColor(0)
 	
+	--move onscreen
 	transition.to(instructions, {time=200,x = 154})
 	transition.to(instructionsText, {time=200,x = 114})
 	
+	--create level failure buttons to help navigate user post round
 	local button1 = display.newImageRect( group, "images/button.png", 320,64 )
 	button1.x = -154
 	button1.y = 272
@@ -195,21 +223,30 @@ function scene:createScene( event )
 	local function endRound()
 		if activeCircles == 0 and isPlanted and canStart then
 			--isPlanted = false
+			
+			-- remove runtime listeners on level end
 			Runtime:removeEventListener ( "touch", spawnCircle )
         	Runtime:removeEventListener ( "enterFrame", endRound )
+        	
 			if score >= targetScore then
+				--level completed
+				
+				--moved notification onscreen
 				instructionsText.text = "Success"
 				transition.to(instructions, {time=200,x = 154})
 				transition.to(instructionsText, {time=200,x = 114})
 				
 				local function advance()
+					--mark level as completed and update/save highest level completed
 					myApp.settings.maxLevel = math.max(myApp.settings.maxLevel, level + 1)
 					myApp.saveTable(myApp.settings, "settings.json")
 					transition.to ( dimBg, {time=500, easing = outExpo, alpha=1, onComplete = function() storyboard.gotoScene ( "menu" ) end} )
 				end
 				
 				timer.performWithDelay ( 1000, advance, 1 )
+				
 			else
+				--level failed
 			
 				local function retry( event )
 					if event.phase == "ended" then
@@ -227,9 +264,11 @@ function scene:createScene( event )
 				
 				instructionsText.text = "Failure"
 				
+				--add button listeners
 				button1:addEventListener ( "touch", retry )
 				button2:addEventListener ( "touch", goToMenu )
 				
+				--move buttons onscreen
 				transition.to(instructions, {time=200,x = 154})
 				transition.to(instructionsText, {time=200,x = 114})
 				transition.to(button1, {time=200,x = 142})
@@ -248,12 +287,14 @@ function scene:createScene( event )
 		canStart = true
 	end
 	
+	--create a diming scene ending effect using black panel
 	dimBg = display.newRect( group, centerX, centerY, display.contentWidth, display.contentHeight )
 	dimBg:setFillColor(0)
 	dimBg.alpha = .01
 	
 	--timer.performWithDelay ( 1500, beginRound, 1 )
 	
+	--add runtime listeners
 	Runtime:addEventListener ( "touch", spawnCircle )
 	Runtime:addEventListener ( "enterFrame", endRound )
 	
